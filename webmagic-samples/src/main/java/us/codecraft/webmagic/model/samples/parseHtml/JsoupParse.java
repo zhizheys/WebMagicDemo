@@ -8,6 +8,14 @@ import org.jsoup.select.Elements;
 import java.io.File;
 
 public class JsoupParse {
+
+    //解析基金HTML文件过程
+    //1.（是否要先给原始文档的所有节点tag添加上绝对坐标或唯一id，以方便以后追踪？？？？），在流程中切fund，即在原document中添加fund标签，并生成fundName和FundId
+    //2.在准备解析HTML文件时， 首先判断该文件是否有fund标签
+    //3.格式规整html文件
+    //4.读取规整后的html文件，判断节点内容（通过规则和机器学习来判断内容），并打上数据点标签， 同时生成对应的json文件
+    //5.将规整后html文件的打标内容同步到原始html文档中
+
     private static String[] lineTagsArray = new String[]{"a","abbr","acronym","b","bdo","big","br","cite","code","dfn",
                                "em","font","i","img","input","kbd","label","q","s","samp",
                                "select","small","span","strike","strong","sub","sup","textarea","tt","u"};
