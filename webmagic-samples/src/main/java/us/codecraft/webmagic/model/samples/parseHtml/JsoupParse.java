@@ -12,7 +12,7 @@ public class JsoupParse {
     //解析基金HTML文件过程
     //1.（是否要先给原始文档的所有节点tag添加上绝对坐标或唯一id，以方便以后追踪？？？？），在流程中切fund，即在原document中添加fund标签，并生成fundName和FundId
     //2.在准备解析HTML文件时， 首先判断该文件是否有fund标签
-    //3.格式规整html文件
+    //3.格式规整html文件，生成只包含 title 标题的h3标签, p 内容标签，p中可以包含keyword关键字strong标签， table表格标签， img 图片标签的html文件
     //4.读取规整后的html文件，判断节点内容（通过规则和机器学习来判断内容），并打上数据点标签， 同时生成对应的json文件
     //5.将规整后html文件的打标内容同步到原始html文档中
 
