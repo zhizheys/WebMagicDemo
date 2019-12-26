@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.*;
+import java.text.Bidi;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,56 +42,75 @@ public class JsoupParse {
         List<String> contentList = new ArrayList<String>();
 
         if (elements != null && elements.size() > 0) {
-            for (Element link : elements) {
-                getSub(link, contentList);
+            for (Element el : elements) {
+                getSub(el, contentList);
             }
         }
-
         return contentList;
     }
 
+    //读取元素内容，进行处理，进行标签转换
     public void getSub(Element element, List<String> contentList) {
-        String linkText = null;
-        String tagName = null;
+        String elementText = element.text();
+        String tagName = element.tagName();
+        String contentHtml = element.html();
         Elements elements = element.children();
 
-        if (elements != null && elements.size() > 0) {
-            Boolean isAllLineTag = true;
-            for (Element link : elements) {
-                isAllLineTag = isExist(lineTagsArray, link.tagName());
+        System.out.println("---------------------------");
+        System.out.println("html is " + element.html());
+        System.out.println("==============================");
+        System.out.println("outerhtml is " + element.outerHtml());
+
+        if("table".equalsIgnoreCase(tagName)){
+            contentList.add(String.format("<%s>%s</%s>", tagName, contentHtml, tagName));
+
+        }else{
+            if (elements != null && elements.size() > 0) {
+                Boolean isAllLineTag = true;
+                for (Element item : elements) {
+                    isAllLineTag = isExistTag(lineTagsArray, item.tagName());
+                    if (!isAllLineTag) {
+                        break;
+                    }
+                }
+
                 if (!isAllLineTag) {
-                    break;
-                }
-            }
+                    for (Element link : elements) {
+                        getSub(link, contentList);
+                    }
+                } else {
+                    elementText = element.text();
+                    //System.out.println(element.outerHtml());
+                    //System.out.println(element.tagName());
 
-            if (!isAllLineTag) {
-                for (Element link : elements) {
-                    getSub(link, contentList);
+                    if (StringUtils.isNotBlank(elementText)) {
+                        tagName = element.tagName();
+                        contentList.add(String.format("<%s>%s</%s>", tagName, elementText, tagName));
+                    }
                 }
+
             } else {
-                linkText = element.text();
-                //System.out.println(element.outerHtml());
-                //System.out.println(element.tagName());
+                elementText = element.text();
 
-                if (StringUtils.isNotBlank(linkText)) {
+                if (StringUtils.isNotBlank(elementText)) {
                     tagName = element.tagName();
-                    contentList.add(String.format("<%s>%s</%s>", tagName, linkText, tagName));
+                    Boolean isAllLineTag = isExistTag(lineTagsArray, tagName);
+                    if (isAllLineTag) {
+                        if(!"img".equalsIgnoreCase(tagName)){
+                            tagName="h3";
+                        }
+                    }else {
+                        if(!"table".equalsIgnoreCase(tagName)){
+                            tagName="p";
+                        }
+                    }
+                    contentList.add(String.format("<%s>%s</%s>", tagName, elementText, tagName));
                 }
-            }
-
-        } else {
-            linkText = element.text();
-  
-            //System.out.println(element.outerHtml());
-            //System.out.println(element.tagName());
-            if (StringUtils.isNotBlank(linkText)) {
-                tagName = element.tagName();
-                contentList.add(String.format("<%s>%s</%s>", tagName, linkText, tagName));
             }
         }
     }
 
-    public Boolean isExist(String[] array, String value) {
+    public Boolean isExistTag(String[] array, String value) {
         Boolean isExist = false;
         if (array != null && array.length > 0) {
             for (String item : array) {
