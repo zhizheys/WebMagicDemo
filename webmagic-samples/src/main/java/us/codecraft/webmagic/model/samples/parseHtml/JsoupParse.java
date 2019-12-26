@@ -1,11 +1,14 @@
 package us.codecraft.webmagic.model.samples.parseHtml;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.File;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JsoupParse {
     //思路： 先通过传统NLP抓取到一部分数据点或标题， 再通过机器学习预测部分内容位置，辅助抓取。 对抓取的内容可以通过bizRule和机器
@@ -20,82 +23,79 @@ public class JsoupParse {
     /*
     示例：
         <h3 uid='abc123456' datapointname='fundName' investmentid='f000001'>MainStay Short Term Bond Fund</h3>
-        <h3 uid='abc123457' datapointname='investmentObjective' investmentid='f000001'>Investment Objective</h3>
+        <h3 uid='abc123457' datapointname='investmentObjective_title' investmentid='f000001'>Investment Objective</h3>
         <p uid='abc123458' datapointname='investmentObjective' >The Cannabis ETF (the “Fund”) seeks to provide investment results that, before fees and expenses, correspond generally to the total return performance of the Innovation Labs Cannabis Index</p>
 
      */
 
-    private static String[] lineTagsArray = new String[]{"a","abbr","acronym","b","bdo","big","br","cite","code","dfn",
-                               "em","font","i","img","input","kbd","label","q","s","samp",
-                               "select","small","span","strike","strong","sub","sup","textarea","tt","u"};
-    private static String[] blockTagsArray = {"address","blockquote","center","dir","div","dl","fieldset",
-            "form","isindex","menu","ol","p","pre","table","ul","h1","h2","h3","h4","h5","h6","hr"};
+    private static String[] lineTagsArray = new String[]{"a", "abbr", "acronym", "b", "bdo", "big", "br", "cite", "code", "dfn",
+            "em", "font", "i", "img", "input", "kbd", "label", "q", "s", "samp",
+            "select", "small", "span", "strike", "strong", "sub", "sup", "textarea", "tt", "u"};
+    private static String[] blockTagsArray = {"address", "blockquote", "center", "dir", "div", "dl", "fieldset",
+            "form", "isindex", "menu", "ol", "p", "pre", "table", "ul", "h1", "h2", "h3", "h4", "h5", "h6", "hr"};
 
-    public void readFile(String filePath) throws Exception{
-        File input = new File(filePath);
-        Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
-
-        Element content = doc.getElementsByTag("body").first();
-        Elements links = content.getElementsByTag("a");
-        for (Element link : links) {
-            String linkHref = link.attr("href");
-            String linkText = link.text();
-            System.out.println(linkText);
-        }
-    }
-
-    public void readFile2(String filePath) throws Exception{
-
+    public List<String> readHtmlFile(String filePath) throws Exception {
         File input = new File(filePath);
         Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
         Elements elements = doc.children();
+        List<String> contentList = new ArrayList<String>();
 
-        if(elements !=null && elements.size() >0){
+        if (elements != null && elements.size() > 0) {
             for (Element link : elements) {
-                getSub(link);
+                getSub(link, contentList);
             }
         }
+
+        return contentList;
     }
 
-    public void getSub(Element element){
+    public void getSub(Element element, List<String> contentList) {
+        String linkText = null;
+        String tagName = null;
         Elements elements = element.children();
 
-        if(elements !=null && elements.size() >0){
+        if (elements != null && elements.size() > 0) {
             Boolean isAllLineTag = true;
             for (Element link : elements) {
-                isAllLineTag=isExist(lineTagsArray,link.tagName());
-                if(!isAllLineTag){
+                isAllLineTag = isExist(lineTagsArray, link.tagName());
+                if (!isAllLineTag) {
                     break;
                 }
             }
 
-            if(!isAllLineTag){
+            if (!isAllLineTag) {
                 for (Element link : elements) {
-                    getSub(link);
+                    getSub(link, contentList);
                 }
-            }else {
-                String linkText = element.text();
-                System.out.println("------------------");
-                System.out.println(linkText);
+            } else {
+                linkText = element.text();
                 //System.out.println(element.outerHtml());
                 //System.out.println(element.tagName());
+
+                if (StringUtils.isNotBlank(linkText)) {
+                    tagName = element.tagName();
+                    contentList.add(String.format("<%s>%s</%s>", tagName, linkText, tagName));
+                }
             }
 
-        }else{
-            String linkText = element.text();
-            System.out.println("------------------");
-            System.out.println(linkText);
+        } else {
+            linkText = element.text();
+  
             //System.out.println(element.outerHtml());
             //System.out.println(element.tagName());
+            if (StringUtils.isNotBlank(linkText)) {
+                tagName = element.tagName();
+                contentList.add(String.format("<%s>%s</%s>", tagName, linkText, tagName));
+            }
         }
     }
 
-    public static Boolean isExist(String[] array,String value){
-        Boolean isExist=false;
-        if(array !=null && array.length >0){
-            for(String item : array){
-                if(item.equalsIgnoreCase(value)){
-                    isExist=true;
+    public Boolean isExist(String[] array, String value) {
+        Boolean isExist = false;
+        if (array != null && array.length > 0) {
+            for (String item : array) {
+                if (item.equalsIgnoreCase(value)) {
+                    isExist = true;
                     break;
                 }
             }
@@ -103,4 +103,52 @@ public class JsoupParse {
 
         return isExist;
     }
+
+    public void createHtmlFile(String fileFullPath, List<String> contentList) throws Exception {
+        File file = new File(fileFullPath);
+        FileOutputStream fos = null;
+        OutputStreamWriter osw = null;
+
+        try {
+            if (contentList != null && !contentList.isEmpty()) {
+                if (file.exists()) {
+                    file.delete();
+                }
+                file.createNewFile();
+                fos = new FileOutputStream(file);
+                osw = new OutputStreamWriter(fos, "utf-8");
+                //create html head and body
+                osw.write("<html><head>");
+                osw.write("\r\n");
+                osw.write("</head><body>");
+                osw.write("\r\n");
+                for (String item : contentList) {
+                    osw.write(item);
+                    osw.write("\r\n");
+                }
+                osw.write("</body></html>");
+            }
+
+        } catch (Exception e) {
+            throw e;
+
+        } finally {
+            try {
+                if (osw != null) {
+                    osw.close();
+                }
+            } catch (IOException e) {
+                throw e;
+            }
+
+            try {
+                if (fos != null) {
+                    fos.close();
+                }
+            } catch (IOException e) {
+                throw e;
+            }
+        }
+    }
+
 }
