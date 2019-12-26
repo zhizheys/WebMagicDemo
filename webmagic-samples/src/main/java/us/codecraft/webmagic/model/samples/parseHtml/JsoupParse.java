@@ -8,6 +8,8 @@ import org.jsoup.select.Elements;
 import java.io.File;
 
 public class JsoupParse {
+    //思路： 先通过传统NLP抓取到一部分数据点或标题， 再通过机器学习预测部分内容位置，辅助抓取。 对抓取的内容可以通过bizRule和机器
+    //      学习相似度一起验证
 
     //解析基金HTML文件过程
     //1.（是否要先给原始文档的所有节点tag添加上绝对坐标或唯一id，以方便以后追踪？？？？），在流程中切fund，即在原document中添加fund标签，并生成fundName和FundId
