@@ -5,11 +5,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import java.io.*;
 import java.text.Bidi;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class JsoupParse {
     //思路： 先通过传统NLP抓取到一部分数据点或标题， 再通过机器学习预测部分内容位置，辅助抓取。 对抓取的内容可以通过bizRule和机器
@@ -54,12 +54,9 @@ public class JsoupParse {
         String elementText = element.text();
         String tagName = element.tagName();
         String contentHtml = element.html();
+        String contentOutHtml =null;
         Elements elements = element.children();
-
-        System.out.println("---------------------------");
-        System.out.println("html is " + element.html());
-        System.out.println("==============================");
-        System.out.println("outerhtml is " + element.outerHtml());
+        Boolean isTitle=false;
 
         if("table".equalsIgnoreCase(tagName)){
             contentList.add(String.format("<%s>%s</%s>", tagName, contentHtml, tagName));
@@ -80,27 +77,48 @@ public class JsoupParse {
                     }
                 } else {
                     elementText = element.text();
-                    //System.out.println(element.outerHtml());
-                    //System.out.println(element.tagName());
+                    elementText=elementText.replace("\n","");
+                    elementText=elementText.replace("\r","");
 
                     if (StringUtils.isNotBlank(elementText)) {
                         tagName = element.tagName();
+                        isAllLineTag = isExistTag(lineTagsArray, tagName);
+                        if (isAllLineTag) {
+                            if(!"img".equalsIgnoreCase(tagName)){
+                                tagName="h3";
+                            }
+                        }else {
+                            if(!"table".equalsIgnoreCase(tagName)){
+                                contentOutHtml=element.outerHtml().replace("\n","");
+                                contentOutHtml=contentOutHtml.replace("\r","");
+                                isTitle=isTitle(elementText,contentOutHtml);
+
+                                if(isTitle){
+                                    tagName="h3";
+                                }else{
+                                    tagName="p";
+                                }
+                            }
+                        }
                         contentList.add(String.format("<%s>%s</%s>", tagName, elementText, tagName));
                     }
                 }
 
             } else {
                 elementText = element.text();
+                elementText=elementText.replace("\n","");
+                elementText=elementText.replace("\r","");
 
                 if (StringUtils.isNotBlank(elementText)) {
                     tagName = element.tagName();
-                    Boolean isAllLineTag = isExistTag(lineTagsArray, tagName);
-                    if (isAllLineTag) {
-                        if(!"img".equalsIgnoreCase(tagName)){
+                    if(!"table".equalsIgnoreCase(tagName)){
+                        contentOutHtml=element.outerHtml().replace("\n","");
+                        contentOutHtml=contentOutHtml.replace("\r","");
+                        isTitle=isTitle(elementText,contentOutHtml);
+
+                        if(isTitle){
                             tagName="h3";
-                        }
-                    }else {
-                        if(!"table".equalsIgnoreCase(tagName)){
+                        }else{
                             tagName="p";
                         }
                     }
@@ -171,4 +189,42 @@ public class JsoupParse {
         }
     }
 
+    //判断是否是title, 根据内容长度，内容结尾或整句不能有句号等标点符号，title字体一般是加粗等
+    public Boolean isTitle(String content,String contentOutHtml){
+        Boolean isTitle=false;
+        Integer maxTitleLength=160;
+        String pattern=".*[/.,;].*";
+        String pattern_fontWeight=".*(bold|bolder).*";
+
+        if(content.trim().equalsIgnoreCase("Investment Objective") || content.trim().equalsIgnoreCase("Fees and Expenses of the Fund")){
+            String a="aaaa";
+        }
+
+        if(StringUtils.isNotBlank(content)){
+            //超长
+            if(content.length() >maxTitleLength){
+                return isTitle;
+            }
+
+            //是否有句号等符号
+            Boolean hasFullStop= Pattern.matches(pattern,content);
+            if(hasFullStop){
+                return isTitle;
+            }
+
+            //是否加粗
+            Boolean hasBoldWeight= Pattern.matches(pattern,contentOutHtml);
+            if(!hasBoldWeight){
+                return isTitle;
+            }
+
+            isTitle=true;
+        }
+        return isTitle;
+    }
+
+    //判断段落内容中是否有关键字
+    public void dealParagraphKeyWord(){
+        
+    }
 }
