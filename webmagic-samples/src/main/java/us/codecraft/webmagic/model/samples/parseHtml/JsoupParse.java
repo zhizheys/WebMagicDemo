@@ -102,6 +102,16 @@ public class JsoupParse extends ParseBase {
 
     @Override
     public void addElementAnnotation() {
+        //根据investment objective 查询fund name， 一般fund name是在investment name 周围，
+        //fund name  一般是单独成行的； 一般是在上方（上方5块之内, 其中3块只内的基本上是正确的）；
+        //假如我们在单独行中查询不到fund name, 则使用上方5块之内的内容通过tf-idf词频提取多个fund name,利用该提取的
+        //fund name放到两个investment objective 中出现次数最高的fund
+        List<String> investmentObjectiveKeyWordList = new ArrayList<String>();
+        investmentObjectiveKeyWordList.add("Investment Objective");
+        investmentObjectiveKeyWordList.add("Goal");
+        investmentObjectiveKeyWordList.add("RISK/RETURN SUMMARY: INVESTMENT OBJECTIVE");
+        investmentObjectiveKeyWordList.add("What is the goal of the Fund");
+        investmentObjectiveKeyWordList.add("Investment Objective and Policies");
 
     }
 
