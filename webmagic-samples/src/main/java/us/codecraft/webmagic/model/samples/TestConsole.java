@@ -8,19 +8,15 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import java.io.*;
 import java.util.Date;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class TestConsole {
     public static  void main(String[] args){
 
-        String content="<div style=\"FONT-SIZE: 10pt; FONT-FAMILY: Sans-Serif; FONT-WEIGHT: bold; FONT-STYLE: normal; TEXT-ALIGN: left; TEXT-INDENT: 2.9pt\"> Investment Objective</div>";
-        String pattern_fontWeight=".*(bold|bolder).*";
 
-        //是否有句号等符号
-        Boolean hasFullStop= Pattern.matches(pattern_fontWeight,content);
-        System.out.println(hasFullStop);
 
-        System.out.println("--------------end");
+        System.out.println("--------------end" +  UUID.randomUUID().toString().replaceAll("-",""));
 
 
     }

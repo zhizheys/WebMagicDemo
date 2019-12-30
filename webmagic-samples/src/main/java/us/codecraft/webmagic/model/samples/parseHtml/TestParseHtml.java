@@ -4,15 +4,15 @@ import java.io.File;
 import java.util.List;
 
 public class TestParseHtml {
-    public static void main(String[] args){
-        String filePath="E:\\MyTestDemo\\parseHtml\\test_3f.html";
-        String createPath="E:\\MyTestDemo\\parseHtml\\test_3f_create.html";
+    public static void main(String[] args) {
+        String filePath = "E:\\MyTestDemo\\parseHtml\\test_3f.html";
+        ParseBase parse = new JsoupParse();
+        try {
+            parse.addIdentifyToDocumentElement(filePath);
+            List<String> contentList = parse.readHtmlFile();
+            parse.createHtmlFile(contentList);
 
-        JsoupParse jsoupParse = new JsoupParse();
-        try{
-          List<String> contentList =  jsoupParse.readHtmlFile(filePath);
-          jsoupParse.createHtmlFile(createPath,contentList);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
 

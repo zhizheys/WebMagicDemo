@@ -5,37 +5,39 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
 import java.io.*;
-import java.text.Bidi;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
-public class JsoupParse {
-    //思路： 先通过传统NLP抓取到一部分数据点或标题， 再通过机器学习预测部分内容位置，辅助抓取。 对抓取的内容可以通过bizRule和机器
-    //      学习相似度一起验证
+public class JsoupParse extends ParseBase {
 
-    //解析基金HTML文件过程
-    //1.（是否要先给原始文档的所有节点tag添加上绝对坐标或唯一id，以方便以后追踪？？？？），在流程中切fund，即在原document中添加fund标签，并生成fundName和FundId
-    //2.在准备解析HTML文件时， 首先判断该文件是否有fund标签
-    //3.格式规整html文件，生成只包含 title 标题的h3标签, p 内容标签，p中可以包含keyword关键字strong标签， table表格标签， img 图片标签的html文件
-    //4.读取规整后的html文件，判断节点内容（通过规则和机器学习来判断内容），并打上数据点标签， 同时生成对应的json文件
-    //5.将规整后html文件的打标内容同步到原始html文档中
-    /*
-    示例：
-        <h3 uid='abc123456' datapointname='fundName' investmentid='f000001'>MainStay Short Term Bond Fund</h3>
-        <h3 uid='abc123457' datapointname='investmentObjective_title' investmentid='f000001'>Investment Objective</h3>
-        <p uid='abc123458' datapointname='investmentObjective' >The Cannabis ETF (the “Fund”) seeks to provide investment results that, before fees and expenses, correspond generally to the total return performance of the Innovation Labs Cannabis Index</p>
+    @Override
+    public void addIdentifyToDocumentElement(String sourceFilePath) {
+        File input = new File(sourceFilePath);
 
-     */
+        try {
+            Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
+            Elements elements = doc.children();
 
-    private static String[] lineTagsArray = new String[]{"a", "abbr", "acronym", "b", "bdo", "big", "br", "cite", "code", "dfn",
-            "em", "font", "i", "img", "input", "kbd", "label", "q", "s", "samp",
-            "select", "small", "span", "strike", "strong", "sub", "sup", "textarea", "tt", "u"};
-    private static String[] blockTagsArray = {"address", "blockquote", "center", "dir", "div", "dl", "fieldset",
-            "form", "isindex", "menu", "ol", "p", "pre", "table", "ul", "h1", "h2", "h3", "h4", "h5", "h6", "hr"};
+            if (elements != null && elements.size() > 0) {
+                for (Element el : elements) {
+                    addIdentifySubElement(el);
+                }
+            }
 
-    public List<String> readHtmlFile(String filePath) throws Exception {
+            String identityFileContent=doc.html();
+            FileUtil.createFile(super.identifyFilePath,identityFileContent);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public List<String> readHtmlFile() throws Exception {
+        String filePath = this.identifyFilePath;
         File input = new File(filePath);
         Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
         Elements elements = doc.children();
@@ -49,100 +51,9 @@ public class JsoupParse {
         return contentList;
     }
 
-    //读取元素内容，进行处理，进行标签转换
-    public void getSub(Element element, List<String> contentList) {
-        String elementText = element.text();
-        String tagName = element.tagName();
-        String contentHtml = element.html();
-        String contentOutHtml =null;
-        Elements elements = element.children();
-        Boolean isTitle=false;
-
-        if("table".equalsIgnoreCase(tagName)){
-            contentList.add(String.format("<%s>%s</%s>", tagName, contentHtml, tagName));
-
-        }else{
-            if (elements != null && elements.size() > 0) {
-                Boolean isAllLineTag = true;
-                for (Element item : elements) {
-                    isAllLineTag = isExistTag(lineTagsArray, item.tagName());
-                    if (!isAllLineTag) {
-                        break;
-                    }
-                }
-
-                if (!isAllLineTag) {
-                    for (Element link : elements) {
-                        getSub(link, contentList);
-                    }
-                } else {
-                    elementText = element.text();
-                    elementText=elementText.replace("\n","");
-                    elementText=elementText.replace("\r","");
-
-                    if (StringUtils.isNotBlank(elementText)) {
-                        tagName = element.tagName();
-                        isAllLineTag = isExistTag(lineTagsArray, tagName);
-                        if (isAllLineTag) {
-                            if(!"img".equalsIgnoreCase(tagName)){
-                                tagName="h3";
-                            }
-                        }else {
-                            if(!"table".equalsIgnoreCase(tagName)){
-                                contentOutHtml=element.outerHtml().replace("\n","");
-                                contentOutHtml=contentOutHtml.replace("\r","");
-                                isTitle=isTitle(elementText,contentOutHtml);
-
-                                if(isTitle){
-                                    tagName="h3";
-                                }else{
-                                    tagName="p";
-                                }
-                            }
-                        }
-                        contentList.add(String.format("<%s>%s</%s>", tagName, elementText, tagName));
-                    }
-                }
-
-            } else {
-                elementText = element.text();
-                elementText=elementText.replace("\n","");
-                elementText=elementText.replace("\r","");
-
-                if (StringUtils.isNotBlank(elementText)) {
-                    tagName = element.tagName();
-                    if(!"table".equalsIgnoreCase(tagName)){
-                        contentOutHtml=element.outerHtml().replace("\n","");
-                        contentOutHtml=contentOutHtml.replace("\r","");
-                        isTitle=isTitle(elementText,contentOutHtml);
-
-                        if(isTitle){
-                            tagName="h3";
-                        }else{
-                            tagName="p";
-                        }
-                    }
-                    contentList.add(String.format("<%s>%s</%s>", tagName, elementText, tagName));
-                }
-            }
-        }
-    }
-
-    public Boolean isExistTag(String[] array, String value) {
-        Boolean isExist = false;
-        if (array != null && array.length > 0) {
-            for (String item : array) {
-                if (item.equalsIgnoreCase(value)) {
-                    isExist = true;
-                    break;
-                }
-            }
-        }
-
-        return isExist;
-    }
-
-    public void createHtmlFile(String fileFullPath, List<String> contentList) throws Exception {
+    @Override
+    public void createHtmlFile(List<String> contentList) throws Exception {
+        String fileFullPath = this.createFilePath;
         File file = new File(fileFullPath);
         FileOutputStream fos = null;
         OutputStreamWriter osw = null;
@@ -189,42 +100,173 @@ public class JsoupParse {
         }
     }
 
-    //判断是否是title, 根据内容长度，内容结尾或整句不能有句号等标点符号，title字体一般是加粗等
-    public Boolean isTitle(String content,String contentOutHtml){
-        Boolean isTitle=false;
-        Integer maxTitleLength=160;
-        String pattern=".*[/.,;].*";
-        String pattern_fontWeight=".*(bold|bolder).*";
+    @Override
+    public void addElementAnnotation() {
 
-        if(content.trim().equalsIgnoreCase("Investment Objective") || content.trim().equalsIgnoreCase("Fees and Expenses of the Fund")){
-            String a="aaaa";
+    }
+
+    @Override
+    public String getElementData(String annotationFilePath) {
+        return "jsonpath";
+    }
+
+    //读取元素内容，添加id
+    public void addIdentifySubElement(Element element) {
+        if(element !=null){
+            element.attr("nodeId", UUID.randomUUID().toString().replaceAll("-",""));
+            Elements elements = element.children();
+            Boolean isTitle = false;
+
+            if (elements != null && elements.size() > 0) {
+                for (Element item : elements) {
+                    addIdentifySubElement(item);
+                }
+            }
         }
 
-        if(StringUtils.isNotBlank(content)){
+    }
+
+    //读取元素内容，进行处理，进行标签转换
+    public void getSub(Element element, List<String> contentList) {
+        String elementText = element.text();
+        String tagName = element.tagName();
+        String contentHtml = element.html();
+        String contentOutHtml = null;
+        Elements elements = element.children();
+        Boolean isTitle = false;
+
+        //get nodeid
+        String nodeId = element.attr("nodeid");
+        String nodeItAttr = String.format("nodeid=%s",nodeId);
+
+        if ("table".equalsIgnoreCase(tagName)) {
+            contentList.add(String.format("<%s %s>%s</%s>", tagName,nodeItAttr,contentHtml,tagName));
+
+        } else {
+            if (elements != null && elements.size() > 0) {
+                Boolean isAllLineTag = true;
+                for (Element item : elements) {
+                    isAllLineTag = isExistTag(lineTagsArray, item.tagName());
+                    if (!isAllLineTag) {
+                        break;
+                    }
+                }
+
+                if (!isAllLineTag) {
+                    for (Element link : elements) {
+                        getSub(link, contentList);
+                    }
+                } else {
+                    elementText = element.text();
+                    elementText = elementText.replace("\n", "");
+                    elementText = elementText.replace("\r", "");
+
+                    if (StringUtils.isNotBlank(elementText)) {
+                        tagName = element.tagName();
+                        isAllLineTag = isExistTag(lineTagsArray, tagName);
+                        if (isAllLineTag) {
+                            if (!"img".equalsIgnoreCase(tagName)) {
+                                tagName = "h3";
+                            }
+                        } else {
+                            if (!"table".equalsIgnoreCase(tagName)) {
+                                contentOutHtml = element.outerHtml().replace("\n", "");
+                                contentOutHtml = contentOutHtml.replace("\r", "");
+                                isTitle = isTitle(elementText, contentOutHtml);
+
+                                if (isTitle) {
+                                    tagName = "h3";
+                                } else {
+                                    tagName = "p";
+                                }
+                            }
+                        }
+
+                         nodeId = element.attr("nodeid");
+                         nodeItAttr = String.format("nodeid=%s",nodeId);
+                        contentList.add(String.format("<%s %s>%s</%s>", tagName,nodeItAttr,contentHtml,tagName));
+
+                    }
+                }
+
+            } else {
+                elementText = element.text();
+                elementText = elementText.replace("\n", "");
+                elementText = elementText.replace("\r", "");
+
+                if (StringUtils.isNotBlank(elementText)) {
+                    tagName = element.tagName();
+                    if (!"table".equalsIgnoreCase(tagName) || !"img".equalsIgnoreCase(tagName)) {
+                        contentOutHtml = element.outerHtml().replace("\n", "");
+                        contentOutHtml = contentOutHtml.replace("\r", "");
+                        isTitle = isTitle(elementText, contentOutHtml);
+
+                        if (isTitle) {
+                            tagName = "h3";
+                        } else {
+                            tagName = "p";
+                        }
+                    }
+
+                    nodeId = element.attr("nodeid");
+                    nodeItAttr = String.format("nodeid=%s",nodeId);
+                    contentList.add(String.format("<%s %s>%s</%s>", tagName,nodeItAttr,contentHtml,tagName));
+                }
+            }
+        }
+    }
+
+    public Boolean isExistTag(String[] array, String value) {
+        Boolean isExist = false;
+        if (array != null && array.length > 0) {
+            for (String item : array) {
+                if (item.equalsIgnoreCase(value)) {
+                    isExist = true;
+                    break;
+                }
+            }
+        }
+
+        return isExist;
+    }
+
+    //判断是否是title, 根据内容长度，内容结尾或整句不能有句号等标点符号，title字体一般是加粗等
+    public Boolean isTitle(String content, String contentOutHtml) {
+        Boolean isTitle = false;
+        Integer maxTitleLength = 160;
+        String pattern = ".*[/.,;].*";
+        String pattern_fontWeight = ".*(bold|bolder).*";
+
+        if (content.trim().equalsIgnoreCase("Investment Objective") || content.trim().equalsIgnoreCase("Fees and Expenses of the Fund")) {
+            String a = "aaaa";
+        }
+
+        if (StringUtils.isNotBlank(content)) {
             //超长
-            if(content.length() >maxTitleLength){
+            if (content.length() > maxTitleLength) {
                 return isTitle;
             }
 
             //是否有句号等符号
-            Boolean hasFullStop= Pattern.matches(pattern,content);
-            if(hasFullStop){
+            Boolean hasFullStop = Pattern.matches(pattern, content);
+            if (hasFullStop) {
                 return isTitle;
             }
 
             //是否加粗
-            Boolean hasBoldWeight= Pattern.matches(pattern,contentOutHtml);
-            if(!hasBoldWeight){
+            Boolean hasBoldWeight = Pattern.matches(pattern, contentOutHtml);
+            if (!hasBoldWeight) {
                 return isTitle;
             }
 
-            isTitle=true;
+            isTitle = true;
         }
         return isTitle;
     }
 
     //判断段落内容中是否有关键字
-    public void dealParagraphKeyWord(){
-        
+    public void dealParagraphKeyWord() {
+
     }
+
 }
