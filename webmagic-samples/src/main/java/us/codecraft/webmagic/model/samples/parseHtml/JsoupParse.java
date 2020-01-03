@@ -2,14 +2,13 @@ package us.codecraft.webmagic.model.samples.parseHtml;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class JsoupParse extends ParseBase {
@@ -28,8 +27,8 @@ public class JsoupParse extends ParseBase {
                 }
             }
 
-            String identityFileContent=doc.html();
-            FileUtil.createFile(super.identifyFilePath,identityFileContent);
+            String identityFileContent = doc.html();
+            FileUtil.createFile(super.identifyFilePath, identityFileContent);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -113,6 +112,11 @@ public class JsoupParse extends ParseBase {
         investmentObjectiveKeyWordList.add("What is the goal of the Fund");
         investmentObjectiveKeyWordList.add("Investment Objective and Policies");
 
+        Map<String, List<String>> dataPointMap = new LinkedHashMap<String, List<String>>();
+        dataPointMap.put("fundNameKeyWord", investmentObjectiveKeyWordList);
+        dataPointMap.put("investmentObjectiveKeyWord", investmentObjectiveKeyWordList);
+
+
     }
 
     @Override
@@ -122,8 +126,8 @@ public class JsoupParse extends ParseBase {
 
     //读取元素内容，添加id
     public void addIdentifySubElement(Element element) {
-        if(element !=null){
-            element.attr("nodeId", UUID.randomUUID().toString().replaceAll("-",""));
+        if (element != null) {
+            element.attr("nodeId", UUID.randomUUID().toString().replaceAll("-", ""));
             Elements elements = element.children();
             Boolean isTitle = false;
 
@@ -145,15 +149,60 @@ public class JsoupParse extends ParseBase {
         Elements elements = element.children();
         Boolean isTitle = false;
 
-        //get nodeid
+        //get current node id
         String nodeId = element.attr("nodeid");
-        String nodeItAttr = String.format("nodeid=%s",nodeId);
+        String nodeItAttr = String.format("nodeid=%s", nodeId);
 
-        if ("table".equalsIgnoreCase(tagName)) {
-            contentList.add(String.format("<%s %s>%s</%s>", tagName,nodeItAttr,contentHtml,tagName));
+        switch (elements.size()) {
+            case 0:
+                dealCurrentElement(element,contentList);
+                break;
 
-        } else {
-            if (elements != null && elements.size() > 0) {
+            case 1:
+                //if parent text == sub text
+                Element subElement= element.child(0);
+                String subElementText =subElement.text();
+                tagName=subElement.tagName();
+
+                if(!StringUtils.isNotBlank(elementText) ){
+                    //假如父亲节点和字节点的内容一致， 将则父节点的attr赋给子节点，并只保留子节点内容
+                    if(elementText.trim().equalsIgnoreCase(subElementText.trim())){
+                        for( Attribute attribute : element.attributes()){
+                            subElement.attr(attribute.getKey(),attribute.getValue());
+                        }
+
+                        contentOutHtml = subElement.outerHtml().replace("\n", "");
+                        contentOutHtml = contentOutHtml.replace("\r", "");
+                        isTitle = isTitle(elementText, contentOutHtml);
+                        if (isTitle) {
+                            tagName = "h3";
+                        } else {
+                            tagName = "p";
+                        }
+
+                        contentHtml = subElement.html();
+                        nodeId = subElement.attr("nodeid");
+                        nodeItAttr = String.format("nodeid=%s", nodeId);
+                        contentList.add(String.format("<%s %s>%s</%s>", tagName, nodeItAttr, contentHtml, tagName));
+
+                    }else{
+                        //假如父亲节点和字节点的内容不一致
+                        Boolean isLineTag= isExistTag(lineTagsArray,tagName);
+                        if(isLineTag){
+                            //将行内容标签改为strong标签
+                            subElement.tagName("strong");
+                            dealCurrentElement(element,contentList);
+
+                        }else{
+                            for (Element link : elements) {
+                                getSub(link, contentList);
+                            }
+                        }
+                    }
+                }
+                break;
+
+            default:
                 Boolean isAllLineTag = true;
                 for (Element item : elements) {
                     isAllLineTag = isExistTag(lineTagsArray, item.tagName());
@@ -167,63 +216,10 @@ public class JsoupParse extends ParseBase {
                         getSub(link, contentList);
                     }
                 } else {
-                    elementText = element.text();
-                    elementText = elementText.replace("\n", "");
-                    elementText = elementText.replace("\r", "");
-
-                    if (StringUtils.isNotBlank(elementText)) {
-                        tagName = element.tagName();
-                        isAllLineTag = isExistTag(lineTagsArray, tagName);
-                        if (isAllLineTag) {
-                            if (!"img".equalsIgnoreCase(tagName)) {
-                                tagName = "h3";
-                            }
-                        } else {
-                            if (!"table".equalsIgnoreCase(tagName)) {
-                                contentOutHtml = element.outerHtml().replace("\n", "");
-                                contentOutHtml = contentOutHtml.replace("\r", "");
-                                isTitle = isTitle(elementText, contentOutHtml);
-
-                                if (isTitle) {
-                                    tagName = "h3";
-                                } else {
-                                    tagName = "p";
-                                }
-                            }
-                        }
-
-                         nodeId = element.attr("nodeid");
-                         nodeItAttr = String.format("nodeid=%s",nodeId);
-                        contentList.add(String.format("<%s %s>%s</%s>", tagName,nodeItAttr,contentHtml,tagName));
-
-                    }
+                    dealCurrentElement(element,contentList);
                 }
-
-            } else {
-                elementText = element.text();
-                elementText = elementText.replace("\n", "");
-                elementText = elementText.replace("\r", "");
-
-                if (StringUtils.isNotBlank(elementText)) {
-                    tagName = element.tagName();
-                    if (!"table".equalsIgnoreCase(tagName) || !"img".equalsIgnoreCase(tagName)) {
-                        contentOutHtml = element.outerHtml().replace("\n", "");
-                        contentOutHtml = contentOutHtml.replace("\r", "");
-                        isTitle = isTitle(elementText, contentOutHtml);
-
-                        if (isTitle) {
-                            tagName = "h3";
-                        } else {
-                            tagName = "p";
-                        }
-                    }
-
-                    nodeId = element.attr("nodeid");
-                    nodeItAttr = String.format("nodeid=%s",nodeId);
-                    contentList.add(String.format("<%s %s>%s</%s>", tagName,nodeItAttr,contentHtml,tagName));
-                }
-            }
         }
+
     }
 
     public Boolean isExistTag(String[] array, String value) {
@@ -278,5 +274,42 @@ public class JsoupParse extends ParseBase {
     public void dealParagraphKeyWord() {
 
     }
+
+    private void dealCurrentElement(Element element, List<String> contentList){
+        String elementText = element.text();
+        String tagName = element.tagName();
+        String contentHtml = element.html();
+        String contentOutHtml = null;
+        Boolean isTitle = false;
+        String nodeId = element.attr("nodeid");
+        String nodeItAttr = String.format("nodeid=%s", nodeId);
+
+        if ("table".equalsIgnoreCase(tagName) || "img".equalsIgnoreCase(tagName)) {
+            contentList.add(String.format("<%s %s>%s</%s>", tagName, nodeItAttr, contentHtml, tagName));
+
+        } else {
+            elementText = element.text();
+            elementText = elementText.replace("\n", "");
+            elementText = elementText.replace("\r", "");
+
+            if (StringUtils.isNotBlank(elementText)) {
+                tagName = element.tagName();
+                contentOutHtml = element.outerHtml().replace("\n", "");
+                contentOutHtml = contentOutHtml.replace("\r", "");
+                isTitle = isTitle(elementText, contentOutHtml);
+
+                if (isTitle) {
+                    tagName = "h3";
+                } else {
+                    tagName = "p";
+                }
+
+                nodeId = element.attr("nodeid");
+                nodeItAttr = String.format("nodeid=%s", nodeId);
+                contentList.add(String.format("<%s %s>%s</%s>", tagName, nodeItAttr, contentHtml, tagName));
+            }
+        }
+    }
+
 
 }
