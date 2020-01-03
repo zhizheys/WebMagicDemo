@@ -66,7 +66,7 @@ public class JsoupParse extends ParseBase {
                 fos = new FileOutputStream(file);
                 osw = new OutputStreamWriter(fos, "utf-8");
                 //create html head and body
-                osw.write("<html><head>");
+                osw.write("<html><head><meta charset='utf-8' />");
                 osw.write("\r\n");
                 osw.write("</head><body>");
                 osw.write("\r\n");
@@ -145,14 +145,14 @@ public class JsoupParse extends ParseBase {
         String elementText = element.text();
         String tagName = element.tagName();
         String contentHtml = element.html();
-        String contentOutHtml = null;
+        String contentOutHtml = element.outerHtml();
         Elements elements = element.children();
         Boolean isTitle = false;
         String nodeId = element.attr("nodeid");
         String nodeItAttr = String.format("nodeid='%s'", nodeId);
 
         if ("table".equalsIgnoreCase(tagName) || "img".equalsIgnoreCase(tagName)) {
-            contentList.add(String.format("<%s %s>%s</%s>", tagName, nodeItAttr, contentHtml, tagName));
+            contentList.add(contentOutHtml);
             return;
         }
 
@@ -173,6 +173,10 @@ public class JsoupParse extends ParseBase {
                 Element subElement= element.child(0);
                 String subElementText =subElement.text();
                 tagName=subElement.tagName();
+
+                if("img".equalsIgnoreCase(tagName)){
+                    String a="bbbbbbbbb";
+                }
 
                 if(StringUtils.isNotBlank(elementText)){
                     //假如父亲节点和字节点的内容一致， 如果子节点没有父节点的某个attr,将则父节点的attr赋给子节点，并只保留子节点内容
@@ -203,6 +207,9 @@ public class JsoupParse extends ParseBase {
                             }
                         }
                     }
+
+                }else{
+                    getSub(subElement, contentList);
                 }
                 break;
 
