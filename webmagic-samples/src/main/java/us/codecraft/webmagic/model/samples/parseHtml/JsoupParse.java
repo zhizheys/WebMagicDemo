@@ -174,10 +174,6 @@ public class JsoupParse extends ParseBase {
                 String subElementText =subElement.text();
                 tagName=subElement.tagName();
 
-                if("img".equalsIgnoreCase(tagName)){
-                    String a="bbbbbbbbb";
-                }
-
                 if(StringUtils.isNotBlank(elementText)){
                     //假如父亲节点和字节点的内容一致， 如果子节点没有父节点的某个attr,将则父节点的attr赋给子节点，并只保留子节点内容
                     if(elementText.trim().equalsIgnoreCase(subElementText.trim())){
