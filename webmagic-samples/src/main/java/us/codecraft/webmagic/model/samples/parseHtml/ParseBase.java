@@ -26,8 +26,8 @@ public abstract class ParseBase {
     protected static String[] blockTagsArray = {"address", "blockquote", "center", "dir", "div", "dl", "fieldset",
             "form", "isindex", "menu", "ol", "p", "pre", "table", "ul", "h1", "h2", "h3", "h4", "h5", "h6", "hr"};
 
-    protected static String identifyFilePath="E:\\MyTestDemo\\parseHtml\\test_3f_identity.html";;
-    protected static String createFilePath="E:\\MyTestDemo\\parseHtml\\test_3f_create.html";;
+    protected static String identifyFilePath="E:\\DeveloperContent\\prospetusParse\\test_identity.html";;
+    protected static String createFilePath="E:\\DeveloperContent\\prospetusParse\\test_create.html";;
 
     public abstract void addIdentifyToDocumentElement(String filePath);
     public abstract List<String> readHtmlFile() throws Exception;

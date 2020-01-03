@@ -151,7 +151,7 @@ public class JsoupParse extends ParseBase {
 
         //get current node id
         String nodeId = element.attr("nodeid");
-        String nodeItAttr = String.format("nodeid=%s", nodeId);
+        String nodeItAttr = String.format("nodeid='%s'", nodeId);
 
         switch (elements.size()) {
             case 0:
@@ -159,34 +159,35 @@ public class JsoupParse extends ParseBase {
                 break;
 
             case 1:
+
+//                if("b".equalsIgnoreCase(tagName) || "strong".equalsIgnoreCase(tagName)){
+//                    element.html(elementText);
+//                    dealCurrentElement(element,contentList);
+//                    return;
+//                }
+
                 //if parent text == sub text
                 Element subElement= element.child(0);
                 String subElementText =subElement.text();
                 tagName=subElement.tagName();
 
-                if(!StringUtils.isNotBlank(elementText) ){
-                    //假如父亲节点和字节点的内容一致， 将则父节点的attr赋给子节点，并只保留子节点内容
+                if(StringUtils.isNotBlank(elementText)){
+                    //假如父亲节点和字节点的内容一致， 如果子节点没有父节点的某个attr,将则父节点的attr赋给子节点，并只保留子节点内容
                     if(elementText.trim().equalsIgnoreCase(subElementText.trim())){
                         for( Attribute attribute : element.attributes()){
-                            subElement.attr(attribute.getKey(),attribute.getValue());
+                            String subAttrValue=subElement.attr(attribute.getKey());
+                            if(StringUtils.isBlank(subAttrValue)){
+                                subElement.attr(attribute.getKey(),attribute.getValue());
+                            }
                         }
-
-                        contentOutHtml = subElement.outerHtml().replace("\n", "");
-                        contentOutHtml = contentOutHtml.replace("\r", "");
-                        isTitle = isTitle(elementText, contentOutHtml);
-                        if (isTitle) {
-                            tagName = "h3";
-                        } else {
-                            tagName = "p";
-                        }
-
-                        contentHtml = subElement.html();
-                        nodeId = subElement.attr("nodeid");
-                        nodeItAttr = String.format("nodeid=%s", nodeId);
-                        contentList.add(String.format("<%s %s>%s</%s>", tagName, nodeItAttr, contentHtml, tagName));
+                        getSub(subElement,contentList);
 
                     }else{
-                        //假如父亲节点和字节点的内容不一致
+                        //假如父亲节点和字节点的内容不一致,并且子节点内容不为空
+                        if(StringUtils.isBlank(subElementText.trim())){
+                            subElement.remove();
+                        }
+
                         Boolean isLineTag= isExistTag(lineTagsArray,tagName);
                         if(isLineTag){
                             //将行内容标签改为strong标签
@@ -282,7 +283,7 @@ public class JsoupParse extends ParseBase {
         String contentOutHtml = null;
         Boolean isTitle = false;
         String nodeId = element.attr("nodeid");
-        String nodeItAttr = String.format("nodeid=%s", nodeId);
+        String nodeItAttr = String.format("nodeid='%s'", nodeId);
 
         if ("table".equalsIgnoreCase(tagName) || "img".equalsIgnoreCase(tagName)) {
             contentList.add(String.format("<%s %s>%s</%s>", tagName, nodeItAttr, contentHtml, tagName));
@@ -305,7 +306,7 @@ public class JsoupParse extends ParseBase {
                 }
 
                 nodeId = element.attr("nodeid");
-                nodeItAttr = String.format("nodeid=%s", nodeId);
+                nodeItAttr = String.format("nodeid='%s'", nodeId);
                 contentList.add(String.format("<%s %s>%s</%s>", tagName, nodeItAttr, contentHtml, tagName));
             }
         }
