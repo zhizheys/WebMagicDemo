@@ -148,10 +148,13 @@ public class JsoupParse extends ParseBase {
         String contentOutHtml = null;
         Elements elements = element.children();
         Boolean isTitle = false;
-
-        //get current node id
         String nodeId = element.attr("nodeid");
         String nodeItAttr = String.format("nodeid='%s'", nodeId);
+
+        if ("table".equalsIgnoreCase(tagName) || "img".equalsIgnoreCase(tagName)) {
+            contentList.add(String.format("<%s %s>%s</%s>", tagName, nodeItAttr, contentHtml, tagName));
+            return;
+        }
 
         switch (elements.size()) {
             case 0:
@@ -237,16 +240,15 @@ public class JsoupParse extends ParseBase {
         return isExist;
     }
 
-    //判断是否是title, 根据内容长度，内容结尾或整句不能有句号等标点符号，title字体一般是加粗等
+   //建议通过打分机制来确定是否title
     public Boolean isTitle(String content, String contentOutHtml) {
         Boolean isTitle = false;
         Integer maxTitleLength = 160;
         String pattern = ".*[/.,;].*";
         String pattern_fontWeight = ".*(bold|bolder).*";
 
-        if (content.trim().equalsIgnoreCase("Investment Objective") || content.trim().equalsIgnoreCase("Fees and Expenses of the Fund")) {
-            String a = "aaaa";
-        }
+        //判断是否是title, 根据内容长度，内容结尾或整句不能有句号等标点符号，title字体一般是加粗等,是否包含color
+        //含有b,strong标签， style中含有color,bold,bolder
 
         if (StringUtils.isNotBlank(content)) {
             //超长
