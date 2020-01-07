@@ -32,3 +32,50 @@ html文件解析思路：
 
 
 
+解析后在HTML文件中保留一个json文件， 用来描述fund信息
+{
+	"document": {
+		"etf": [],
+		"esg": [],
+		"fund": [
+			{
+			    "fundId":{
+                        "location":null,
+                        "rawValue":null,
+                        "value":"F0000001"
+                },
+				"fundName":{
+					"location":"abcq123_NodeId",
+					"rawValue":"",
+					"value":""
+				},
+				"objective":{
+					"location":"abcq123_NodeId",
+					"rawValue":"",
+					"value":""
+				},
+				"shareClass":[
+				    {
+				        "shareClassNameId":{
+                                                "location":null,
+                                                "rawValue":null,
+                                                "value":"F0000001"
+                                        },
+				        "shareClassName":{
+                                        "location":"abcq123_NodeId",
+                                        "rawValue":"",
+                                        "value":""
+                                    },
+				        "fee":{
+                                "location":"abcq123_NodeId",
+                                "rawValue":"",
+                                "value":""
+				        }
+				    }
+				]
+			}
+		]
+	}
+}
+
+
