@@ -1,5 +1,6 @@
 package us.codecraft.webmagic.model.samples.parseHtml;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class ParseBase {
@@ -26,12 +27,34 @@ public abstract class ParseBase {
     protected static String[] blockTagsArray = {"address", "blockquote", "center", "dir", "div", "dl", "fieldset",
             "form", "isindex", "menu", "ol", "p", "pre", "table", "ul", "h1", "h2", "h3", "h4", "h5", "h6", "hr"};
 
-    protected static String identifyFilePath="E:\\DeveloperContent\\prospetusParse\\test_identity.html";;
-    protected static String createFilePath="E:\\DeveloperContent\\prospetusParse\\test_create.html";;
+    protected static String identifyFilePath = "E:\\DeveloperContent\\prospetusParse\\test_identity.html";
+    protected static String createFilePath = "E:\\DeveloperContent\\prospetusParse\\test_create.html";
+    protected static List<String> fundDataPointList;
+    protected static List<String> shareClassDataPointList;
+
+    public ParseBase() {
+        fundDataPointList = new ArrayList<String>();
+        fundDataPointList.add("fundId");
+        fundDataPointList.add("fundName");
+        fundDataPointList.add("investmentObjective");
+        fundDataPointList.add("strategy");
+        fundDataPointList.add("risk");
+
+
+        shareClassDataPointList= new ArrayList<String>();
+        shareClassDataPointList.add("shareClassId");
+        shareClassDataPointList.add("shareClassName");
+
+    }
 
     public abstract void addIdentifyToDocumentElement(String filePath);
+
     public abstract List<String> readHtmlFile() throws Exception;
+
+    //生成预测后的html文件
     public abstract void createHtmlFile(List<String> contentList) throws Exception;
-    public abstract void addElementAnnotation();
-    public abstract String getElementData(String annotationFilePath);
+
+    //打标并生成打标json文件
+    public abstract String addElementAnnotationAndFile();
+
 }

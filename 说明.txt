@@ -16,8 +16,6 @@
 
 
 
-
-
 html文件解析思路：
 
 //思路： 先通过传统NLP抓取到一部分数据点或标题， 再通过机器学习预测部分内容位置，辅助抓取。 对抓取的内容可以通过bizRule和机器
@@ -49,7 +47,7 @@ html文件解析思路：
 					"rawValue":"",
 					"value":""
 				},
-				"objective":{
+				"investmentObjective":{
 					"location":"abcq123_NodeId",
 					"rawValue":"",
 					"value":""
@@ -77,5 +75,24 @@ html文件解析思路：
 		]
 	}
 }
+
+
+
+===机器学习打标
+
+1. investment objective 标题打标
+
+    Investment Objective,
+    Goal,
+    RISK/RETURN SUMMARY: INVESTMENT OBJECTIVE,
+    What is the goal of the Fund,
+    Investment Objective and Policies,
+
+
+2. investment objective 内容打标
+
+
+
+
 
 
