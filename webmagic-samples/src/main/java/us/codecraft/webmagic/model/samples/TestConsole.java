@@ -4,28 +4,19 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import us.codecraft.webmagic.model.samples.parseHtml.HttpUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class TestConsole {
     public static  void main(String[] args){
 
-        String html = "<html><head><title>First parse</title></head>"
-                + "<body> <p class='aclass' style='font-weight:60'>ccc1111<b class='blcass'>333</b></p>    <p class='aclass' style='font-weight:60'>ccc2222<b class='blcass'>Parsed HTML into a doc</b></p><p class='eeee'><b>These tables are intended to help you understand the various costs and expenses you will pay if you buy and hold shares of the Fund. You may qualify for sales charge discounts if you and your family invest, or agree to invest in the future, at l</b></p></body></html>";
-
-
-        try{
-            Document doc = Jsoup.parse(html);
-            Elements elements = doc.children();
-
-            for(Element item : elements){
-                showElement(item);
-            }
-
-
-        }catch (Exception ex){
-            ex.printStackTrace();
-        }
-
+        String url="http://10.86.16.248:8000/matchdatapoint/";
+        String data ="{\"dataInfo\":\"investment objective\"}";
+        String result = HttpUtil.sendPost(url,data);
+        System.out.println(result);
     }
 
     public static void showElement(Element element){
