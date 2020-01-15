@@ -61,6 +61,17 @@
             <version>5.5.13</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.opennlp</groupId>
+            <artifactId>opennlp-tools</artifactId>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.opennlp/opennlp-uima -->
+        <dependency>
+            <groupId>org.apache.opennlp</groupId>
+            <artifactId>opennlp-uima</artifactId>
+        </dependency>
+
 
 
     </dependencies>
