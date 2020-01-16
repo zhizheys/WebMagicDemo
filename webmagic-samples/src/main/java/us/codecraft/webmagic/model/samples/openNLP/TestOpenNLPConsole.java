@@ -16,7 +16,8 @@ public class TestOpenNLPConsole {
     // http://opennlp.sourceforge.net/models-1.5/
 
 
-    private static  String str="Let's go,This isn't the greatest example sentence in the world because I've seen better.  Neither is this one.  This one's not bad, though.";
+    //private static  String str="let's go and plan game, it's not good";
+    private static  String str="工信处女干事每月经过下属科室都要亲口交代24口交换机等技术性器件的安装工作";
 
     public static void main(String[] args){
         System.out.println("hello open nlp");
