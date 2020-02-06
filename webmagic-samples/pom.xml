@@ -61,20 +61,25 @@
             <version>5.5.13</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.opennlp</groupId>
-            <artifactId>opennlp-tools</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.opennlp</groupId>-->
+<!--            <artifactId>opennlp-tools</artifactId>-->
+<!--        </dependency>-->
 
-        <!-- https://mvnrepository.com/artifact/org.apache.opennlp/opennlp-uima -->
-        <dependency>
-            <groupId>org.apache.opennlp</groupId>
-            <artifactId>opennlp-uima</artifactId>
-        </dependency>
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.apache.opennlp/opennlp-uima &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.opennlp</groupId>-->
+<!--            <artifactId>opennlp-uima</artifactId>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>com.hankcs</groupId>-->
+<!--            <artifactId>hanlp</artifactId>-->
+<!--        </dependency>-->
 
         <dependency>
-            <groupId>com.hankcs</groupId>
-            <artifactId>hanlp</artifactId>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
         </dependency>
 
 
