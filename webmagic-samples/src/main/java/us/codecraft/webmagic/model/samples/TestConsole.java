@@ -11,12 +11,18 @@ import java.util.Map;
 
 
 public class TestConsole {
-    public static  void main(String[] args){
 
-        String url="http://10.86.16.248:8000/matchdatapoint/";
-        String data ="{\"dataInfo\":\"investment objective\"}";
-        String result = HttpUtil.sendPost(url,data);
-        System.out.println(result);
+    static   String a;
+
+    public static  void main(String[] args){
+         a="abc";
+        System.out.println(a);
+
+        //a="def";
+
+        System.out.println(a);
+
+        System.out.println("end");
     }
 
     public static void showElement(Element element){
