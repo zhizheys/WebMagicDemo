@@ -9,18 +9,23 @@ import java.util.List;
 /**
  * @author code4crafter@gmail.com <br>
  */
-public class TianyaPageProcesser implements PageProcessor {
+public class TianyaPageProcesser {
 
-    @Override
-    public void process(Page page) {
-        List<String> strings = page.getHtml().regex("<a[^<>]*href=[\"']{1}(/post-free.*?\\.shtml)[\"']{1}").all();
-        page.addTargetRequests(strings);
-        page.putField("title", page.getHtml().xpath("//div[@id='post_head']//span[@class='s_title']//b"));
-        page.putField("body",page.getHtml().smartContent());
+    public TianyaPageProcesser(){
+        System.out.println("father innitial");
     }
 
-    @Override
-    public Site getSite() {
-        return Site.me().setDomain("http://bbs.tianya.cn/");  //To change body of implemented methods use File | Settings | File Templates.
+    public TianyaPageProcesser(String a){
+        System.out.println("father innitial args " + a);
     }
+
+    protected void doSomething(){
+        System.out.println("father dosomething");
+    }
+
+    protected TianyaPageProcesser foo(){
+        return  new TianyaPageProcesser();
+    }
+
+
 }
